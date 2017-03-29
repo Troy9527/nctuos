@@ -9,6 +9,7 @@ kernel_load_addr = 0x100000;
 SECTIONS
 {
 	. = kernel_load_addr;
+	PROVIDE(code_start = .);
 
 	/* AT(...) gives the load address of this section, which tells
 	   the boot loader where to load the kernel in physical memory */
@@ -41,6 +42,7 @@ SECTIONS
 	/* Adjust the address for the data segment to the next page */
 	. = ALIGN(0x1000);
 
+	PROVIDE(data_start = .);
 	/* The data segment */
 	.data : {
 		*(.data)
