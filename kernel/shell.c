@@ -3,6 +3,7 @@
 #include <inc/shell.h>
 #include <inc/timer.h>
 
+int chgcolor(int argc, char **argv);
 struct Command {
 	const char *name;
 	const char *desc;
@@ -12,8 +13,10 @@ struct Command {
 
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
+	{ "HELP", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
-	{ "print_tick", "Display system tick", print_tick }
+	{ "print_tick", "Display system tick", print_tick },
+	{ "chgcolor", "Change forecolor", chgcolor }
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -27,6 +30,11 @@ int mon_help(int argc, char **argv)
 	return 0;
 }
 
+extern uint32_t code_start;
+extern uint32_t etext;
+extern uint32_t data_start;
+extern uint32_t end;
+
 int mon_kerninfo(int argc, char **argv)
 {
 	/* TODO: Print the kernel code and data section size 
@@ -35,11 +43,35 @@ int mon_kerninfo(int argc, char **argv)
    *       Use PROVIDE inside linker script and calculate the
    *       offset.
    */
+
+   cprintf("Kernel code base start = 0x%x, size = %d\n", &code_start, &etext-&code_start);
+   cprintf("Kernel data base start = 0x%x, size = %d\n", &data_start, &end-&data_start);
+   cprintf("Kernel executable memory footprint = %dKB\n", (&end-&code_start)/1024);
+
 	return 0;
 }
 int print_tick(int argc, char **argv)
 {
 	cprintf("Now tick = %d\n", get_tick());
+}
+
+extern void settextcolor();
+
+int chgcolor(int argc, char **argv){
+	if(argc < 2){
+		cprintf("No input text color!\n");
+	}
+	else{
+		int forecolor;
+		if(argv[1][0]>=48 && argv[1][0]<=58) forecolor = argv[1][0] - 48;
+		else if(argv[1][0]>=65 && argv[1][0]<=70) forecolor = argv[1][0] - 55;
+		else if(argv[1][0]>=97 && argv[1][0]<=102) forecolor = argv[1][0] - 87;
+		else forecolor = 0;
+
+		settextcolor(forecolor,0);
+		cprintf("Change color %d\n",forecolor);
+	}
+	return 0;
 }
 
 #define WHITESPACE "\t\r\n "

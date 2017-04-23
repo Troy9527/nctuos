@@ -15,6 +15,7 @@ CFLAGS += -I.
 
 OBJDIR = .
 
+LDFLAGS = -m elf_i386
 
 include boot/Makefile
 include kernel/Makefile
@@ -28,3 +29,6 @@ clean:
 	rm $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
 	rm $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
 	rm $(OBJDIR)/lib/*.o
+
+debug:
+	qemu -hda kernel.img -monitor stdio
