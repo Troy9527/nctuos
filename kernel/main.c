@@ -10,9 +10,13 @@
 #include <kernel/timer.h>
 #include <kernel/cpu.h>
 
+#include <fs.h>
+
+extern void fs_test();
 extern void init_video(void);
 static void boot_aps(void);
-extern Task *cur_task;
+extern int disk_init();
+extern void disk_test();
 
 void kernel_main(void)
 {
@@ -28,14 +32,19 @@ void kernel_main(void)
 	trap_init();
 	pic_init();
 	kbd_init();
+
   	timer_init();
   	syscall_init();
+	disk_init();
+	//disk_test();
+	/*TODO: Lab7, uncommend it when you finish Lab7 3.1 part */
+	//fs_test();
+	fs_init();
 	boot_aps();
 
   printk("Kernel code base start=0x%08x to = 0x%08x\n", stext, etext);
   printk("Readonly data start=0x%08x to = 0x%08x\n", etext, rdata_end);
   printk("Kernel data base start=0x%08x to = 0x%08x\n", data_start, end);
-
 
 
   /* Enable interrupt */
@@ -51,7 +60,7 @@ void kernel_main(void)
   "pushl %2\n\t" \
   "pushl %3\n\t" \
   "iret\n" \
-  :: "m" (cpus[0].cpu_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cpus[0].cpu_task->tf.tf_eip)
+  :: "m" (thiscpu->cpu_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (thiscpu->cpu_task->tf.tf_eip)
   :"ax");
 }
 
@@ -80,7 +89,6 @@ boot_aps(void)
 	// Your code here:
 	extern char mpentry_start[], mpentry_end[];
 
-	    // write AP entry code
 	void *kva;
 	kva = KADDR(MPENTRY_PADDR);
 	memmove(kva, mpentry_start, (mpentry_end - mpentry_start));
@@ -175,12 +183,12 @@ mp_main(void)
 	// boot_aps() we're up ( using xchg )
 	// Your code here:
 	lapic_init();
-	extern struct Pseudodesc idt_pd;
-	extern struct Pseudodesc gdt_pd;
-	task_init_percpu();
-	
-	lidt(&idt_pd);
-	xchg(&thiscpu->cpu_status, CPU_STARTED);
+    extern struct Pseudodesc idt_pd;
+    extern struct Pseudodesc gdt_pd;
+    task_init_percpu();
+
+    lidt(&idt_pd);
+    xchg(&thiscpu->cpu_status, CPU_STARTED);
 
 
 	/* Enable interrupt */
