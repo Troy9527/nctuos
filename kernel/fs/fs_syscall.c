@@ -5,6 +5,7 @@
 #include <inc/stdio.h>
 #include <inc/syscall.h>
 #include <fs.h>
+#include <fat/ff.h>
 
 /*TODO: Lab7, file I/O system call interface.*/
 /*Note: Here you need handle the file system call from user.
@@ -153,6 +154,28 @@ int sys_unlink(const char *pathname)
 	file_unlink(pathname);
 }
 
+int sys_list(const char *pathname){
+	DIR dir;
+	FILINFO fno;
+	int res;
+	int ret;
 
+	//printk("ls folder = %s\n", pathname);
+ 	ret = f_opendir(&dir, pathname);
+	if(ret != 0){
+		printk("path doesn't exist\n");
+		return -1;
+	}
+
+	res = f_readdir(&dir, &fno);
+	while (strlen(fno.fname)) {
+//		printk("[%s] ret = %d, filename = %s, fsize = %d, date = %d, time = %d\n",__func__, res, fno.fname, fno.fsize, fno.fdate, fno.ftime);
+		printk("%s type = FILE size = %d\n", fno.fname, fno.fsize);
+		res = f_readdir(&dir, &fno);
+	}
+	f_closedir(&dir);
+
+	return 0;
+}
               
 

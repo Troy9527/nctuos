@@ -27,7 +27,9 @@ int filetest3(int argc, char **argv);
 int filetest4(int argc, char **argv);
 int filetest5(int argc, char **argv);
 int spinlocktest(int argc, char **argv);
-
+int list_dir(int argc, char **argv);
+int remove_file(int argc, char **argv);
+int touch_file(int argc, char **argv);
 
 struct Command commands[] = {
   { "help", "Display this list of commands", mon_help },
@@ -42,9 +44,48 @@ struct Command commands[] = {
   { "filetest3", "Laqrge block test", filetest3},
   { "filetest4", "Error test", filetest4},
   { "filetest5", "unlink test", filetest5},
-  { "spinlocktest", "Test spinlock", spinlocktest }
+  { "spinlocktest", "Test spinlock", spinlocktest },
+  { "ls", "list files", list_dir},
+  { "rm", "remove file", remove_file},
+  { "touch", "create new file", touch_file}
 };
 const int NCOMMANDS = (sizeof(commands)/sizeof(commands[0]));
+
+int list_dir(int argc, char **argv){
+	if(argc < 2){
+	  	cprintf("Need path parameter\n");
+		return 0;	
+	}
+						
+	list(argv[1]);
+	return 0;
+}
+
+int remove_file(int argc, char **argv){
+	if (argv[1] == NULL){
+		cprintf("missing path parameter\n");
+		return 0;
+	}
+
+	int ret = -1;
+	ret = unlink(argv[1]);
+	
+	if (ret < 0){
+		cprintf("No such file or directory\n");
+	}
+	return 0;
+}
+
+int touch_file(int argc, char **argv){
+	int fd;
+	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0);
+	if(fd < 0){
+		cprintf("Can't create file\n");
+	}
+
+	close(fd);
+	return 0;
+}
 
 int mem_stat(int argc, char **argv)
 {

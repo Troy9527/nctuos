@@ -55,8 +55,6 @@ struct fs_ops
     //int (*getdents)	(struct fs_fd* fd, struct dirent* dirp, uint32_t count);
     int (*unlink)	(const char* pathname);
 	
-	// dir 
-
 };
 
 

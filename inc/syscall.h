@@ -23,6 +23,7 @@ enum {
   SYS_lseek,
   SYS_unlink,
   SYS_readdir,
+  SYS_list,
   NSYSCALLS
 };
 
