@@ -80,7 +80,7 @@ int touch_file(int argc, char **argv){
 	int fd;
 	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0);
 	if(fd < 0){
-		cprintf("Can't create file\n");
+		cprintf("Can't create file, fd = %d\n",fd);
 	}
 
 	close(fd);

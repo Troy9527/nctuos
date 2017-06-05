@@ -82,8 +82,10 @@ int fat_open(struct fs_fd* file)
 	}
 	
 	ret = f_open(file->data, file->path, mode);
-
 	FIL *object = file->data;
+	file->size = object->obj.objsize;
+	file->pos = 0;
+	
 	if(file->flags & O_APPEND) f_lseek(file->data, object->obj.objsize);
 
 	return -ret;

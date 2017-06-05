@@ -69,11 +69,10 @@ int sys_open(const char *file, int flags, int mode)
 	if(find_flag == 0){
 		i = fd_new();
 		if(i == -1) return -1;
-		fds = fd_get(i);
-		fd_put(fds);
+		fds = fd_get(i);  	// increase ref_count
+		fd_put(fds);		// decrease ref_count
 		if(i != -1) find_flag = 1;
 	}
-	//strcpy(fds->path, file);
 
 	// open file
 	if(find_flag == 1){

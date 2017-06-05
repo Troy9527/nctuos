@@ -45,7 +45,7 @@ disk:
 	rm lab7.img
 	qemu-img create -f raw lab7.img 32M
 
-click:
+test:
 	make clean
 	make all
 	make disk
