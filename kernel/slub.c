@@ -292,7 +292,7 @@ kmem_cache_free(struct kmem_cache_t *cachep, void *objp) {
     // Get slab of object 
     //void *base = page2kva(pages);
     //void *kva = ROUNDDOWN(objp, PGSIZE);
-    struct slab_t *slab = (struct slab_t *) &pages[PGNUM(objp)];
+    struct slab_t *slab = (struct slab_t *)pa2page(PADDR(objp));
     // Get offset in slab
     struct PageInfo *p = slab;
 	int16_t *bufctl = page2kva(p);
@@ -386,9 +386,7 @@ kmalloc(size_t size) {
 
 void 
 kfree(void *objp) {
-    //void *base = slab2kva(pages);
-    //void *kva = ROUNDDOWN(objp, PGSIZE);
-    struct slab_t *slab = (struct slab_t *) &pages[PGNUM(objp)];
+	struct slab_t *slab = (struct slab_t *)pa2page(PADDR(objp));
     kmem_cache_free(slab->cachep, objp);
 }
 
