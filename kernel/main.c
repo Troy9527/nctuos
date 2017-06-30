@@ -8,6 +8,7 @@
 #include <kernel/task.h>
 #include <kernel/syscall.h>
 #include <kernel/timer.h>
+#include <kernel/slub.h>
 
 extern void init_video(void);
 extern Task *cur_task;
@@ -23,7 +24,8 @@ void kernel_main(void)
 	trap_init();
 	pic_init();
 	kbd_init();
-  mem_init();
+	mem_init();
+	kmem_int();
 
   printk("Kernel code base start=0x%08x to = 0x%08x\n", stext, etext);
   printk("Readonly data start=0x%08x to = 0x%08x\n", etext, rdata_end);

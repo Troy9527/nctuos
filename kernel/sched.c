@@ -22,14 +22,15 @@
 static int index = 0;  // the task we pick last time
 void sched_yield(void)
 {
-	extern Task tasks[];
+	extern Task *tasks;
 	extern Task *cur_task;
+	Task *ts = tasks;
 
 	int i, next;
 	i = (index + 1)%NR_TASKS;
 	
 	// find the target task
-	while(1){
+	/*while(1){
 		if(tasks[i].state == TASK_RUNNABLE){
 			next = i;	
 			break;
@@ -37,18 +38,24 @@ void sched_yield(void)
 
 		i = (i+1)%NR_TASKS;
 
-		/*if(i == index){  // doesn't exist ant RUNNABLE task
-			next = -1;
+	}*/
+
+
+	while(ts != NULL){
+		if(ts->state == TASK_RUNNABLE){
+			next = ts->task_id;
 			break;
-		}*/
+		}
+		ts = ts->next;
 	}
+
 
 	if(next == -1){ // no other RUNNABLE task
 		next = index;
 	}
 
 	if(next >=0 && next <NR_TASKS){
-		cur_task = &tasks[next];
+		cur_task = ts;
 		cur_task->remind_ticks = TIME_QUANT;
 		cur_task->state = TASK_RUNNING;
 		index = next;

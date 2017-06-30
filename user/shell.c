@@ -2,6 +2,7 @@
 #include <inc/stdio.h>
 #include <inc/string.h>
 #include <inc/shell.h>
+#include <kernel/slub.h>
 
 char hist[SHELL_HIST_MAX][BUF_LEN];
 
@@ -15,15 +16,29 @@ int mem_stat(int argc, char **argv);
 int print_tick(int argc, char **argv);
 int chgcolor(int argc, char **argv);
 int forktest(int argc, char **argv);
+int memtest(int argc, char **argv);
 
 struct Command commands[] = {
   { "help", "Display this list of commands", mon_help },
   { "mem_stat", "Show current usage of physical memory", mem_stat },
   { "print_tick", "Display system tick", print_tick },
   { "chgcolor", "Change screen text color", chgcolor },
-  { "forktest", "Test functionality of fork()", forktest }
+  { "forktest", "Test functionality of fork()", forktest },
+  { "memtest", "Test functionality of fork()", memtest },
 };
 const int NCOMMANDS = (sizeof(commands)/sizeof(commands[0]));
+
+int memtest(int argc, char **argv){
+	cprintf("%-10s MEM_STAT %10s\n", "--------", "--------");
+	cprintf("Used: %18d pages\n", get_num_used_page());
+    cprintf("Free: %18d pages\n", get_num_free_page());
+
+	char *buff = (char *)kmalloc(10*sizeof(char));
+	cprintf("%-10s MEM_STAT %10s\n", "--------", "--------");
+	cprintf("Used: %18d pages\n", get_num_used_page());
+    cprintf("Free: %18d pages\n", get_num_free_page());
+
+}
 
 int mem_stat(int argc, char **argv)
 {

@@ -51,7 +51,8 @@ struct Pseudodesc gdt_pd = {
 
 
 static struct tss_struct tss;
-Task tasks[NR_TASKS];
+//Task tasks[NR_TASKS];
+Task *tasks = NULL;
 
 extern char bootstack[];
 
@@ -95,19 +96,25 @@ extern void sched_yield(void);
  * 6. Return the pid of the newly created task.
  *
  */
-int task_create()
+static int pindex=0;
+Task *task_create()
 {
 	Task *ts = NULL;
 
 	/* Find a free task structure */
 	int i,j;
-	for(i=0; i<NR_TASKS; i++){
+	/*for(i=0; i<NR_TASKS; i++){
 		if(tasks[i].state == TASK_FREE || tasks[i].state == TASK_STOP){
 			ts = &tasks[i];
 			break;
 		}
-	}
-	
+	}*/
+	ts = (Task *)kmalloc(sizeof(Task));
+	i = pindex;
+	pindex++;
+	ts->next = tasks;
+	tasks = ts;
+
 	if(i == NR_TASKS) return -1;   // cannot find task structure
 
 	/* Setup Page Directory and pages for kernel*/
@@ -137,7 +144,7 @@ int task_create()
 	ts->parent_id =	((uint32_t)cur_task)?cur_task->task_id:0;
 	ts->state = TASK_RUNNABLE;
 	ts->remind_ticks = TIME_QUANT;
-	return i;
+	return ts;
 }
 
 
@@ -161,12 +168,29 @@ int task_create()
 static void task_free(int pid){
 	lcr3(PADDR(kern_pgdir));
 	int i;
-	for(i=0; i<USR_STACK_SIZE; i+=PGSIZE){
-		page_remove(tasks[pid].pgdir,(void*)USTACKTOP-USR_STACK_SIZE+i);
+	Task *ts = tasks , *pre = NULL;
+	while(ts != NULL){
+		if(ts->task_id == pid){
+			if(pre != NULL){ // not the first
+				pre->next = ts->next;
+			}
+			else{
+				tasks = ts->next;
+			}
+			break;
+		}
+		pre = ts;
+		ts = ts->next;
 	}
-	ptable_remove(tasks[pid].pgdir);
-	pgdir_remove(tasks[pid].pgdir);
 
+	for(i=0; i<USR_STACK_SIZE; i+=PGSIZE){
+		page_remove(ts->pgdir,(void*)USTACKTOP-USR_STACK_SIZE+i);
+	}
+	ptable_remove(ts->pgdir);
+	pgdir_remove(ts->pgdir);
+
+	//kfree(ts);
+	pindex--;
 }
 
 void sys_kill(int pid)
@@ -178,7 +202,15 @@ void sys_kill(int pid)
    * Free the memory
    * and invoke the scheduler for yield
    */
-		tasks[pid].state = TASK_STOP;
+	Task *ts = tasks;
+	while(ts != NULL){
+		if(ts->task_id == pid){
+			break;
+		}
+		ts = ts->next;
+	}
+
+		ts->state = TASK_STOP;
 		task_free(pid);
 		sched_yield();
 	}
@@ -212,13 +244,15 @@ int sys_fork()
 {
   	/* pid for newly created process */
   	int pid,i;
-	pid = task_create();
+	Task *ts;
+	ts = task_create();
+	pid = ts->task_id;
 	if(pid == -1) return -1;
 
 	if ((uint32_t)cur_task){
 
 	// copy trap frame of the parent to the child
-	tasks[pid].tf = cur_task->tf;
+	ts->tf = cur_task->tf;
 
 	// copy stack
 	pte_t *p_pte, *c_pte;
@@ -231,7 +265,7 @@ int sys_fork()
 			panic("Parent_PTE doesn't present\n");*/
 		
 		// find child's correspond page table
-		if((c_pte = pgdir_walk(tasks[pid].pgdir,(void*)(USTACKTOP-USR_STACK_SIZE+i),0)) == NULL)
+		if((c_pte = pgdir_walk(ts->pgdir,(void*)(USTACKTOP-USR_STACK_SIZE+i),0)) == NULL)
 			panic("Parent_PTE doesn't exist\n");
 		/*if(!(*c_pte & PTE_P))
 			panic("Parent_PTE doesn't present\n");*/
@@ -244,14 +278,14 @@ int sys_fork()
 	}
 
     /* Step 4: All user program use the same code for now */
-    setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+    setupvm(ts->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+    setupvm(ts->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+    setupvm(ts->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+    setupvm(ts->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
 
 	// system call return value;
 	cur_task->tf.tf_regs.reg_eax = pid;
-	tasks[pid].tf.tf_regs.reg_eax = 0;
+	ts->tf.tf_regs.reg_eax = 0;
 
 	}
 
@@ -272,12 +306,12 @@ void task_init()
   URODATA_SZ = (uint32_t)(URODATA_end - URODATA_start);
 
 	/* Initial task sturcture */
-	for (i = 0; i < NR_TASKS; i++)
+	/*for (i = 0; i < NR_TASKS; i++)
 	{
 		memset(&(tasks[i]), 0, sizeof(Task));
 		tasks[i].state = TASK_FREE;
 
-	}
+	}*/
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
 	memset(&(tss), 0, sizeof(tss));
@@ -293,8 +327,9 @@ void task_init()
 	gdt[GD_TSS0 >> 3].sd_s = 0;
 
 	/* Setup first task */
-	i = task_create();
-	cur_task = &(tasks[i]);
+	Task *ts;
+	ts = task_create();
+	cur_task = ts;
 
   /* For user program */
   setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);

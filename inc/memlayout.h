@@ -4,6 +4,8 @@
 #ifndef __ASSEMBLER__
 #include <inc/types.h>
 #include <inc/mmu.h>
+#include <inc/list.h>
+//#include <kernel/slub.h>
 #endif /* not __ASSEMBLER__ */
 
 /*
@@ -174,14 +176,15 @@ extern volatile pde_t uvpd[];     // VA of current page directory
  */
 struct PageInfo {
 	// Next page on the free list.
+	int pp_ref;
+	list_entry_t page_link;
 	struct PageInfo *pp_link;
-
+	//struct kmem_cache_t *cachep;
 	// pp_ref is the count of pointers (usually in page table entries)
 	// to this page, for pages allocated using page_alloc.
 	// Pages allocated at boot time using pmap.c's
 	// boot_alloc do not have valid reference count fields.
 
-	uint16_t pp_ref;
 };
 
 #endif /* !__ASSEMBLER__ */

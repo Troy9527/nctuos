@@ -25,7 +25,7 @@ void timer_handler(struct Trapframe *tf)
 
   jiffies++;
 
-  extern Task tasks[];
+  extern Task *tasks;
 
   extern Task *cur_task;
 
@@ -42,17 +42,27 @@ void timer_handler(struct Trapframe *tf)
    *
    */
   		int i;
-		for(i = 0; i<NR_TASKS; i++){  // wake up sleeping task
+		Task *ts = tasks;
+		/*for(i = 0; i<NR_TASKS; i++){  // wake up sleeping task
 			if(tasks[i].state == TASK_SLEEP){
 				tasks[i].remind_ticks--;
 				if(tasks[i].remind_ticks <= 0){
 					tasks[i].state = TASK_RUNNABLE;
 				}
 			}
-		}
+		}*/
 
+		while(ts != NULL){
+			if(ts->state == TASK_SLEEP){
+				ts->remind_ticks--;
+				if(ts->remind_ticks < 0){
+					ts->state = TASK_RUNNABLE;
+				}
+			}
+			ts = ts->next;
+		}
 		cur_task->remind_ticks--;
-		
+
 		if(cur_task->remind_ticks <= 0){   // current running out of time quant
 			cur_task->state = TASK_RUNNABLE;
 			sched_yield();

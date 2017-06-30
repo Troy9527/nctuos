@@ -12,6 +12,7 @@ KERN_OBJS = kernel/entry.o \
 	kernel/trap_entry.o \
 	kernel/printf.o \
 	kernel/mem.o \
+	kernel/slub.o \
 	kernel/entrypgdir.o \
 	kernel/assert.o \
 	kernel/kclock.o \

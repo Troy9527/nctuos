@@ -36,3 +36,8 @@ qemu:
 
 debug:
 	qemu-system-i386 -hda kernel.img -monitor stdio -s -S
+
+test:
+	make clean
+	make all
+	make qemu
