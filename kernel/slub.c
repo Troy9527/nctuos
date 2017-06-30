@@ -386,9 +386,9 @@ kmalloc(size_t size) {
 
 void 
 kfree(void *objp) {
-    void *base = slab2kva(pages);
-    void *kva = ROUNDDOWN(objp, PGSIZE);
-    struct slab_t *slab = (struct slab_t *) &pages[(kva-base)/PGSIZE];
+    //void *base = slab2kva(pages);
+    //void *kva = ROUNDDOWN(objp, PGSIZE);
+    struct slab_t *slab = (struct slab_t *) &pages[PGNUM(objp)];
     kmem_cache_free(slab->cachep, objp);
 }
 
