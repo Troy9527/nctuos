@@ -41,7 +41,9 @@ kmem_cache_grow(struct kmem_cache_t *cachep) {
     struct slab_t *slab = (struct slab_t *) page;
     slab->cachep = cachep;
     slab->inuse = slab->free = 0;
-    add_before(cachep->slabs_free, slab);
+//    add_before(cachep->slabs_free, slab);
+	slab->next = cachep->slabs_free;
+	cachep->slabs_free = slab;
 
 	// Init bufctl
     int16_t *bufctl = kva;
@@ -220,7 +222,6 @@ kmem_cache_destroy(struct kmem_cache_t *cachep) {
     list_entry_t *head, *le;
     // Destory full slabs
     le = cachep->slabs_full;
-    //le = list_next(head);
     while (le != NULL) {
         struct slab_t *temp = le;
         le = le->next;
@@ -228,7 +229,6 @@ kmem_cache_destroy(struct kmem_cache_t *cachep) {
     }
     // Destory partial slabs 
     le = cachep->slabs_partial;
-    //le = list_next(head);
     while (le != NULL) {
         struct slab_t *temp = le;
         le = le->next;
@@ -236,7 +236,6 @@ kmem_cache_destroy(struct kmem_cache_t *cachep) {
     }
     // Destory free slabs 
     le = cachep->slabs_free;
-    //le = list_next(head);
     while (le != NULL) {
         struct slab_t *temp = le;
         le = le->next;
@@ -394,7 +393,7 @@ kfree(void *objp) {
 }
 
 void
-kmem_int() {
+kmem_init() {
 
     // Init cache for kmem_cache
 	cache_cache.objsize = sizeof(struct kmem_cache_t);

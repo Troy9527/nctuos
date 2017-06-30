@@ -35,6 +35,6 @@ void *kmalloc(size_t size);
 void kfree(void *objp);
 size_t ksize(void *objp);
 
-void kmem_int();
+void kmem_init();
 
 #endif /* ! __KERN_MM_SLUB_H__ */
