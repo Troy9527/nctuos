@@ -103,13 +103,8 @@ Task *task_create()
 
 	/* Find a free task structure */
 	int i,j;
-	/*for(i=0; i<NR_TASKS; i++){
-		if(tasks[i].state == TASK_FREE || tasks[i].state == TASK_STOP){
-			ts = &tasks[i];
-			break;
-		}
-	}*/
 	ts = (Task *)kmalloc(sizeof(Task));
+	
 	i = pindex;
 	pindex++;
 	ts->next = tasks;
