@@ -41,10 +41,7 @@ kmem_cache_grow(struct kmem_cache_t *cachep) {
     struct slab_t *slab = (struct slab_t *) page;
     slab->cachep = cachep;
     slab->inuse = slab->free = 0;
-    //list_add(&(cachep->slabs_free), &(slab->slab_link));
-    //add_before(cachep->slabs_free, slab);
-	slab->next = cachep->slabs_free;
-	cachep->slabs_free = slab;
+    add_before(cachep->slabs_free, slab);
 
 	// Init bufctl
     int16_t *bufctl = kva;
